@@ -1,0 +1,8 @@
+{
+  "name": "Doniyor Nasriyev — iqtisod yo'nalishi talabasi",
+  "description": "Doniyor Nasriyev — iqtisod yo'nalishi talabasi, IELTS va milliy sertifikat sohibi, xalqaro olimpiada terma jamoasining sobiq a'zosi.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
