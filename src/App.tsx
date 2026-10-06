@@ -1,5 +1,4 @@
-```tsx
-import React, { useState, useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   Award,
   Trophy,
@@ -80,6 +79,7 @@ export default function App() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedHandle, setCopiedHandle] = useState<string | null>(null);
+
   const [activeInterest, setActiveInterest] = useState<
     'all' | 'football' | 'chess'
   >('all');
@@ -87,7 +87,10 @@ export default function App() {
   const [photoSrc, setPhotoSrc] = useState<string>(() => {
     try {
       const stored = localStorage.getItem('doniyor_custom_photo');
-      if (stored) return stored;
+
+      if (stored) {
+        return stored;
+      }
     } catch {
       // ignore
     }
@@ -119,36 +122,47 @@ export default function App() {
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = e.target.files?.[0];
 
-    if (file) {
-      const reader = new FileReader();
-
-      reader.onload = (event) => {
-        const result = event.target?.result as string;
-
-        if (result) {
-          setPhotoSrc(result);
-
-          try {
-            localStorage.setItem('doniyor_custom_photo', result);
-          } catch {
-            // ignore
-          }
-        }
-      };
-
-      reader.readAsDataURL(file);
+    if (!file) {
+      return;
     }
+
+    const reader = new FileReader();
+
+    reader.onload = (event) => {
+      const result = event.target?.result as string;
+
+      if (!result) {
+        return;
+      }
+
+      setPhotoSrc(result);
+
+      try {
+        localStorage.setItem(
+          'doniyor_custom_photo',
+          result
+        );
+      } catch {
+        // ignore
+      }
+    };
+
+    reader.readAsDataURL(file);
   };
 
   return (
     <div className="min-h-screen bg-[#f8fafc] text-[#0f172a] font-sans selection:bg-blue-600 selection:text-white flex flex-col justify-between">
+
       <BackgroundFX />
 
       <header className="sticky top-0 z-40 bg-[#f8fafc]/90 backdrop-blur-md border-b border-slate-200/80 transition-all">
         <div className="max-w-6xl mx-auto px-6 h-18 flex items-center justify-between">
+
           <a
             href="#hero"
             className="text-lg md:text-xl font-bold tracking-tight text-slate-900 hover:text-blue-600 transition-colors whitespace-nowrap"
@@ -157,6 +171,7 @@ export default function App() {
           </a>
 
           <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-600">
+
             <a
               href="#about"
               className="hover:text-slate-900 transition-colors py-1 relative after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-blue-600 hover:after:w-full after:transition-all"
@@ -184,9 +199,11 @@ export default function App() {
             >
               Bog'lanish
             </a>
+
           </nav>
 
           <div className="hidden md:flex items-center gap-3">
+
             <button
               onClick={handleCopyPageUrl}
               className="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold text-slate-700 bg-white border border-slate-200 rounded-lg hover:border-slate-300 hover:bg-slate-50 transition-colors shadow-xs cursor-pointer whitespace-nowrap"
@@ -195,7 +212,9 @@ export default function App() {
               {copiedLink ? (
                 <>
                   <Check className="w-3.5 h-3.5 text-emerald-600" />
-                  <span className="text-emerald-700">Nusxalandi</span>
+                  <span className="text-emerald-700">
+                    Nusxalandi
+                  </span>
                 </>
               ) : (
                 <>
@@ -212,9 +231,11 @@ export default function App() {
               <span>Bog'lanish</span>
               <ArrowUpRight className="w-3.5 h-3.5" />
             </a>
+
           </div>
 
           <div className="flex md:hidden items-center gap-2">
+
             <button
               onClick={handleCopyPageUrl}
               className="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
@@ -228,7 +249,9 @@ export default function App() {
             </button>
 
             <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              onClick={() =>
+                setMobileMenuOpen(!mobileMenuOpen)
+              }
               className="p-2 text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
               aria-label="Menyu"
               aria-expanded={mobileMenuOpen}
@@ -239,11 +262,13 @@ export default function App() {
                 <Menu className="w-6 h-6" />
               )}
             </button>
+
           </div>
         </div>
 
         {mobileMenuOpen && (
           <div className="md:hidden border-b border-slate-200 bg-white/98 px-6 py-4 space-y-3 animate-fadeIn">
+
             <a
               href="#about"
               onClick={() => setMobileMenuOpen(false)}
@@ -286,17 +311,21 @@ export default function App() {
                 <ArrowUpRight className="w-3.5 h-3.5" />
               </a>
             </div>
+
           </div>
         )}
       </header>
 
       <main className="flex-1 relative z-10">
+
         <section
           id="hero"
           className="relative max-w-6xl mx-auto px-6 pt-12 pb-20 md:pt-20 md:pb-28 transition-all"
         >
           <div className="grid grid-cols-1 md:grid-cols-12 gap-10 md:gap-14 items-center">
+
             <div className="md:col-span-7 flex flex-col justify-center order-2 md:order-1">
+
               <div className="text-xs md:text-sm font-semibold tracking-wider text-blue-600 uppercase mb-3">
                 SHAXSIY SAHIFA
               </div>
@@ -311,17 +340,30 @@ export default function App() {
 
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-600 mb-8 border-l-2 border-blue-600 pl-4 py-0.5">
                 <span>IELTS sohibi</span>
-                <span className="text-slate-300" aria-hidden="true">
+
+                <span
+                  className="text-slate-300"
+                  aria-hidden="true"
+                >
                   ·
                 </span>
+
                 <span>Milliy sertifikat</span>
-                <span className="text-slate-300" aria-hidden="true">
+
+                <span
+                  className="text-slate-300"
+                  aria-hidden="true"
+                >
                   ·
                 </span>
-                <span>Xalqaro olimpiada terma jamoasi sobiq a'zosi</span>
+
+                <span>
+                  Xalqaro olimpiada terma jamoasi sobiq a'zosi
+                </span>
               </div>
 
               <div className="flex flex-wrap items-center gap-3">
+
                 <a
                   href="#about"
                   className="inline-flex items-center justify-center px-6 py-3 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 active:scale-[0.98] transition-all shadow-sm shadow-blue-600/20 whitespace-nowrap cursor-pointer"
@@ -335,14 +377,18 @@ export default function App() {
                 >
                   Bog'lanish (Telegram & Instagram)
                 </a>
+
               </div>
             </div>
 
             <div className="md:col-span-5 order-1 md:order-2 flex justify-center md:justify-end">
+
               <div className="relative group w-full max-w-sm sm:max-w-md">
+
                 <div className="absolute -inset-1.5 bg-gradient-to-tr from-slate-200 to-slate-100 rounded-3xl blur-xs -z-10 opacity-70" />
 
                 <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-slate-200 border border-slate-200/90 shadow-lg shadow-slate-900/5">
+
                   <img
                     src={photoSrc}
                     alt="Doniyor Nasriyev"
@@ -350,15 +396,17 @@ export default function App() {
                     loading="eager"
                     referrerPolicy="no-referrer"
                     onError={(e) => {
-                      const target = e.currentTarget;
-                      target.src = '/doniyor-nasriyev.jpg';
+                      e.currentTarget.src =
+                        '/doniyor-nasriyev.jpg';
                     }}
                   />
 
                   <div className="absolute inset-0 rounded-2xl ring-1 ring-inset ring-black/5 pointer-events-none" />
 
                   <button
-                    onClick={() => fileInputRef.current?.click()}
+                    onClick={() =>
+                      fileInputRef.current?.click()
+                    }
                     className="absolute bottom-3 right-3 px-2.5 py-1.5 bg-slate-900/70 hover:bg-slate-900 text-white rounded-lg text-[11px] font-medium backdrop-blur-xs opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1.5 cursor-pointer shadow-sm"
                     title="Suratni almashtirish"
                   >
@@ -373,9 +421,11 @@ export default function App() {
                     onChange={handleFileChange}
                     className="hidden"
                   />
+
                 </div>
               </div>
             </div>
+
           </div>
         </section>
 
@@ -388,8 +438,10 @@ export default function App() {
           className="max-w-6xl mx-auto px-6 py-20 md:py-28"
         >
           <div className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12">
+
             <div className="md:col-span-4">
               <div className="sticky top-24">
+
                 <span className="text-xs font-semibold tracking-wider uppercase text-blue-600 block mb-2">
                   Tanishtiruv
                 </span>
@@ -399,29 +451,34 @@ export default function App() {
                 </h2>
 
                 <p className="mt-3 text-sm text-slate-500 leading-relaxed">
-                  Iqtisodiy tahlil, ta'limdagi intilishlar va shaxsiy
-                  qiziqishlar haqida qisqacha ma'lumot.
+                  Iqtisodiy tahlil, ta'limdagi intilishlar va shaxsiy qiziqishlar haqida qisqacha ma'lumot.
                 </p>
+
               </div>
             </div>
 
             <div className="md:col-span-8 flex flex-col justify-center">
+
               <div className="bg-white p-8 sm:p-10 rounded-2xl border border-slate-200/80 shadow-xs">
+
                 <blockquote className="text-lg sm:text-xl lg:text-2xl font-normal text-slate-800 leading-relaxed tracking-normal">
-                  “Men iqtisod yo'nalishida o'qiyman. IELTS va milliy
-                  sertifikat sohibiman, avval xalqaro olimpiada terma jamoasi
-                  a'zosi bo'lganman. Bo'sh vaqtimda futbol o'ynayman va
-                  shaxmat bilan shug'ullanaman.”
+                  “Men iqtisod yo'nalishida o'qiyman. IELTS va milliy sertifikat sohibiman, avval xalqaro olimpiada terma jamoasi a'zosi bo'lganman. Bo'sh vaqtimda futbol o'ynayman va shaxmat bilan shug'ullanaman.”
                 </blockquote>
 
                 <div className="mt-6 pt-6 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+
                   <span className="font-semibold text-slate-800">
                     Doniyor Nasriyev
                   </span>
-                  <span>Iqtisod yo'nalishi talabasi</span>
+
+                  <span>
+                    Iqtisod yo'nalishi talabasi
+                  </span>
+
                 </div>
               </div>
             </div>
+
           </div>
         </section>
 
@@ -434,6 +491,7 @@ export default function App() {
           className="max-w-6xl mx-auto px-6 py-20 md:py-28"
         >
           <div className="mb-12">
+
             <span className="text-xs font-semibold tracking-wider uppercase text-blue-600 block mb-2">
               Akademik & Ilmiy
             </span>
@@ -443,14 +501,17 @@ export default function App() {
             </h2>
 
             <p className="mt-2 text-sm text-slate-600 max-w-xl">
-              Xalqaro va milliy miqyosda qo'lga kiritilgan muhim sertifikatlar
-              hamda jamoaviy ishtiroklar.
+              Xalqaro va milliy miqyosda qo'lga kiritilgan muhim sertifikatlar hamda jamoaviy ishtiroklar.
             </p>
+
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+
             <div className="bg-white p-7 rounded-2xl border border-slate-200/80 hover:border-slate-300 hover:shadow-md transition-all duration-200 flex flex-col justify-between group">
+
               <div>
+
                 <div className="w-11 h-11 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mb-6 group-hover:bg-blue-600 group-hover:text-white transition-colors">
                   <Award className="w-5 h-5" />
                 </div>
@@ -460,18 +521,21 @@ export default function App() {
                 </h3>
 
                 <p className="text-sm text-slate-600 leading-relaxed">
-                  Ingliz tilini xalqaro standartlar asosida erkin egallaganlikni
-                  tasdiqlovchi nufuzli xalqaro sertifikat.
+                  Ingliz tilini xalqaro standartlar asosida erkin egallaganlikni tasdiqlovchi nufuzli xalqaro sertifikat.
                 </p>
+
               </div>
 
               <div className="mt-6 pt-4 border-t border-slate-100 flex items-center text-xs text-slate-600">
                 <span>Xalqaro daraja</span>
               </div>
+
             </div>
 
             <div className="bg-white p-7 rounded-2xl border border-slate-200/80 hover:border-slate-300 hover:shadow-md transition-all duration-200 flex flex-col justify-between group">
+
               <div>
+
                 <div className="w-11 h-11 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mb-6 group-hover:bg-blue-600 group-hover:text-white transition-colors">
                   <Sparkles className="w-5 h-5" />
                 </div>
@@ -481,18 +545,21 @@ export default function App() {
                 </h3>
 
                 <p className="text-sm text-slate-600 leading-relaxed">
-                  Davlat ta'lim me'yorlari va mutaxassislik fanlari bo'yicha
-                  yuqori bilim darajasini tasdiqlovchi sertifikat.
+                  Davlat ta'lim me'yorlari va mutaxassislik fanlari bo'yicha yuqori bilim darajasini tasdiqlovchi sertifikat.
                 </p>
+
               </div>
 
               <div className="mt-6 pt-4 border-t border-slate-100 flex items-center text-xs text-slate-600">
                 <span>Respublika miqyosida</span>
               </div>
+
             </div>
 
             <div className="bg-white p-7 rounded-2xl border border-slate-200/80 hover:border-slate-300 hover:shadow-md transition-all duration-200 flex flex-col justify-between group">
+
               <div>
+
                 <div className="w-11 h-11 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mb-6 group-hover:bg-blue-600 group-hover:text-white transition-colors">
                   <Trophy className="w-5 h-5" />
                 </div>
@@ -502,15 +569,17 @@ export default function App() {
                 </h3>
 
                 <p className="text-sm text-slate-600 leading-relaxed">
-                  Xalqaro miqyosdagi fan olimpiadasida terma jamoa tarkibida
-                  ishtirok etgan sobiq a'zo.
+                  Xalqaro miqyosdagi fan olimpiadasida terma jamoa tarkibida ishtirok etgan sobiq a'zo.
                 </p>
+
               </div>
 
               <div className="mt-6 pt-4 border-t border-slate-100 flex items-center text-xs text-slate-600">
                 <span>Terma jamoa sobiq a'zosi</span>
               </div>
+
             </div>
+
           </div>
         </section>
 
@@ -523,7 +592,9 @@ export default function App() {
           className="max-w-6xl mx-auto px-6 py-20 md:py-28"
         >
           <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-10 gap-4">
+
             <div>
+
               <span className="text-xs font-semibold tracking-wider uppercase text-blue-600 block mb-2">
                 Hobbiy va qiziqishlar
               </span>
@@ -533,12 +604,13 @@ export default function App() {
               </h2>
 
               <p className="mt-2 text-sm text-slate-600">
-                Bo'sh vaqtlarda shug'ullanadigan asosiy sport va intellektual
-                mashg'ulotlar.
+                Bo'sh vaqtlarda shug'ullanadigan asosiy sport va intellektual mashg'ulotlar.
               </p>
+
             </div>
 
             <div className="flex items-center gap-1 p-1 bg-slate-200/60 rounded-lg self-start sm:self-auto">
+
               <button
                 onClick={() => setActiveInterest('all')}
                 className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors whitespace-nowrap cursor-pointer ${
@@ -571,15 +643,20 @@ export default function App() {
               >
                 Shaxmat
               </button>
+
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
             {(activeInterest === 'all' ||
               activeInterest === 'football') && (
               <div className="bg-white p-8 rounded-2xl border border-slate-200/80 hover:border-slate-300 transition-all shadow-xs flex flex-col justify-between">
+
                 <div>
+
                   <div className="flex items-center justify-between mb-4">
+
                     <span className="text-xs font-medium text-slate-600">
                       Jamoaviy sport
                     </span>
@@ -587,6 +664,7 @@ export default function App() {
                     <span className="text-xs font-medium text-blue-600">
                       Bo'sh vaqt
                     </span>
+
                   </div>
 
                   <h3 className="text-xl font-bold text-slate-900 mb-3 flex items-center gap-2">
@@ -594,25 +672,32 @@ export default function App() {
                   </h3>
 
                   <p className="text-sm text-slate-600 leading-relaxed mb-6">
-                    Bo'sh vaqtda faol jismoniy holatni saqlash, jamoaviy
-                    birdamlik, tezkor qaror qabul qilish va sog'lom raqobat
-                    ruhiyatini shakllantiruvchi sevimli sport turi.
+                    Bo'sh vaqtda faol jismoniy holatni saqlash, jamoaviy birdamlik, tezkor qaror qabul qilish va sog'lom raqobat ruhiyatini shakllantiruvchi sevimli sport turi.
                   </p>
+
                 </div>
 
                 <div className="pt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-600">
+
                   <span>Jamoaviy o'yin</span>
+
                   <span className="font-medium text-slate-700">
                     Doimiy mashg'ulot
                   </span>
+
                 </div>
+
               </div>
             )}
 
-            {(activeInterest === 'all' || activeInterest === 'chess') && (
+            {(activeInterest === 'all' ||
+              activeInterest === 'chess') && (
               <div className="bg-white p-8 rounded-2xl border border-slate-200/80 hover:border-slate-300 transition-all shadow-xs flex flex-col justify-between">
+
                 <div>
+
                   <div className="flex items-center justify-between mb-4">
+
                     <span className="text-xs font-medium text-slate-600">
                       Intellektual sport
                     </span>
@@ -620,6 +705,7 @@ export default function App() {
                     <span className="text-xs font-medium text-blue-600">
                       Mantiqiy tahlil
                     </span>
+
                   </div>
 
                   <h3 className="text-xl font-bold text-slate-900 mb-3 flex items-center gap-2">
@@ -627,20 +713,24 @@ export default function App() {
                   </h3>
 
                   <p className="text-sm text-slate-600 leading-relaxed mb-6">
-                    Strategik fikrlash, har bir yurish oqibatini chuqur tahlil
-                    qilish, sabr-toqat va iqtisodiy tahlilga xos bo'lgan
-                    tizimli mulohaza yuritish qobiliyatini charxlaydi.
+                    Strategik fikrlash, har bir yurish oqibatini chuqur tahlil qilish, sabr-toqat va iqtisodiy tahlilga xos bo'lgan tizimli mulohaza yuritish qobiliyatini charxlaydi.
                   </p>
+
                 </div>
 
                 <div className="pt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-600">
+
                   <span>Strategik fikrlash</span>
+
                   <span className="font-medium text-slate-700">
                     Taktik rejalashtirish
                   </span>
+
                 </div>
+
               </div>
             )}
+
           </div>
         </section>
 
@@ -653,6 +743,7 @@ export default function App() {
           className="max-w-6xl mx-auto px-6 py-20 md:py-28"
         >
           <div className="max-w-3xl mx-auto text-center mb-12">
+
             <span className="text-xs font-semibold tracking-wider uppercase text-blue-600 block mb-2">
               Muloqot va aloqa
             </span>
@@ -662,19 +753,23 @@ export default function App() {
             </h2>
 
             <p className="mt-3 text-sm sm:text-base text-slate-600 leading-relaxed">
-              Quyidagi rasmiy ijtimoiy tarmoqlar orqali bog'lanishingiz va
-              profillarimni kuzatishingiz mumkin.
+              Quyidagi rasmiy ijtimoiy tarmoqlar orqali bog'lanishingiz va profillarimni kuzatishingiz mumkin.
             </p>
+
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-3xl mx-auto">
+
             {SOCIAL_LINKS.map((social) => (
               <div
                 key={social.id}
                 className="bg-white p-7 rounded-2xl border border-slate-200/80 hover:border-blue-400 hover:shadow-md transition-all duration-200 flex flex-col justify-between group"
               >
+
                 <div>
+
                   <div className="flex items-start justify-between gap-3 mb-4">
+
                     <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-colors">
                       <BrandIcon
                         name={social.id}
@@ -691,6 +786,7 @@ export default function App() {
                     >
                       <ArrowUpRight className="w-5 h-5" />
                     </a>
+
                   </div>
 
                   <h3 className="text-lg font-bold text-slate-900 mb-1">
@@ -704,9 +800,11 @@ export default function App() {
                   <p className="text-sm text-slate-600 leading-relaxed mb-6">
                     {social.description}
                   </p>
+
                 </div>
 
                 <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
+
                   <a
                     href={social.url}
                     target="_blank"
@@ -719,7 +817,10 @@ export default function App() {
 
                   <button
                     onClick={() =>
-                      handleCopyText(social.url, social.id)
+                      handleCopyText(
+                        social.url,
+                        social.id
+                      )
                     }
                     className="inline-flex items-center gap-1 px-3 py-2 text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
                     title="Havoladan nusxa olish"
@@ -738,44 +839,64 @@ export default function App() {
                       </>
                     )}
                   </button>
+
                 </div>
               </div>
             ))}
+
           </div>
         </section>
+
       </main>
 
       <footer className="border-t border-slate-200 bg-white/70 py-10 text-xs text-slate-500">
+
         <div className="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-6">
+
           <div className="flex flex-col items-center sm:items-start gap-1.5">
+
             <div className="flex items-center gap-2">
+
               <span className="font-semibold text-slate-900 text-sm">
                 Doniyor Nasriyev
               </span>
 
-              <span aria-hidden="true">·</span>
+              <span aria-hidden="true">
+                ·
+              </span>
 
-              <span>Iqtisod yo'nalishi talabasi</span>
+              <span>
+                Iqtisod yo'nalishi talabasi
+              </span>
+
             </div>
 
             <p className="text-xs text-slate-500 font-normal">
               Doniyor Nasriyev (Дониёр Насриев, Doniyor Nasriev)
             </p>
+
           </div>
 
           <div className="flex items-center gap-4 text-xs font-medium">
+
             <a
               href="https://t.me/Doniyor_Nasriyev"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1 text-slate-600 hover:text-blue-600 transition-colors"
             >
-              <BrandIcon name="telegram" className="w-4 h-4" />
+              <BrandIcon
+                name="telegram"
+                className="w-4 h-4"
+              />
               <span>Telegram</span>
               <ArrowUpRight className="w-3 h-3 text-slate-400" />
             </a>
 
-            <span className="text-slate-300" aria-hidden="true">
+            <span
+              className="text-slate-300"
+              aria-hidden="true"
+            >
               ·
             </span>
 
@@ -785,21 +906,25 @@ export default function App() {
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1 text-slate-600 hover:text-blue-600 transition-colors"
             >
-              <BrandIcon name="instagram" className="w-4 h-4" />
+              <BrandIcon
+                name="instagram"
+                className="w-4 h-4"
+              />
               <span>Instagram</span>
               <ArrowUpRight className="w-3 h-3 text-slate-400" />
             </a>
+
           </div>
 
           <div>
             <p>
-              © {new Date().getFullYear()} Doniyor Nasriyev. Barcha huquqlar
-              himoyalangan.
+              © {new Date().getFullYear()} Doniyor Nasriyev. Barcha huquqlar himoyalangan.
             </p>
           </div>
+
         </div>
       </footer>
+
     </div>
   );
 }
-```
