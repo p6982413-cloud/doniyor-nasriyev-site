@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   ArrowUpRight,
   Award,
@@ -8,12 +8,15 @@ import {
   Crown,
   Instagram,
   Menu,
+  MessageSquare,
+  Send,
   Sparkles,
   Trophy,
   X,
 } from 'lucide-react';
 
 import BackgroundFX from './BackgroundFX';
+import { supabase } from './supabase';
 
 interface SocialItem {
   id: string;
@@ -48,7 +51,7 @@ function TelegramIcon({ className = 'w-5 h-5' }: { className?: string }) {
       fill="currentColor"
       aria-hidden="true"
     >
-      <path d="M21.7 4.3c.3-1.1-.8-1.6-1.7-1.2L3.1 10.2c-1.2.5-1.2 1.2-.2 1.5l4.3 1.3 1.6 5.1c.2.7.1 1 .8 1 .5 0 .7-.2 1-.5l2.1-2 4.4 3.2c.8.5 1.4.2 1.6-.8L21.7 4.3zM8 12.6l9.9-6.2c.5-.3.9-.1.5.2l-8.1 7.3-.3 2.6-1.1-3.9-1.1-.3.2-.1z" />
+      <path d="M21.7 4.3c.3-1.1-.8-1.6-1.7-1.2L3.1 10.2c-1.2.5-1.2 1.2-.2 1.5l4.3 1.3 1.6 5.1c.2.7.1 1 .8 1 .5 0 .7-.2 1-.5l2.1-2 4.4 3.2c.8.5 1.4.2 1.6-.8L21.7 4.3zM8 12.6l9.9-6.2c.5-.3.9-.1.5.2l-8.1 7.3-.3 2.6-1.1 2.6-.3-3.9-1.1-.3.2-.1z" />
     </svg>
   );
 }
@@ -71,6 +74,7 @@ export default function App() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedSocial, setCopiedSocial] = useState<string | null>(null);
+
   const [activeInterest, setActiveInterest] = useState<
     'all' | 'football' | 'chess'
   >('all');
@@ -78,6 +82,7 @@ export default function App() {
   const [photoSrc, setPhotoSrc] = useState<string>(() => {
     try {
       const stored = localStorage.getItem('doniyor_custom_photo');
+
       if (stored) return stored;
     } catch {
       // ignore
@@ -86,7 +91,47 @@ export default function App() {
     return '/doniyor-nasriyev.jpg';
   });
 
+  const [name, setName] = useState('');
+  const [message, setMessage] = useState('');
+  const [sendingQuestion, setSendingQuestion] = useState(false);
+  const [questionSent, setQuestionSent] = useState(false);
+  const [questionError, setQuestionError] = useState('');
+
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  /*
+   * TASHRIFNI HISOBLASH
+   * Bir brauzer sessiyasida qayta-qayta refresh qilinsa,
+   * har safar yangi tashrif hisoblanmaydi.
+   */
+  useEffect(() => {
+    const visitKey = 'doniyor_site_visit';
+
+    try {
+      const alreadyVisited = sessionStorage.getItem(visitKey);
+
+      if (alreadyVisited) return;
+
+      sessionStorage.setItem(visitKey, 'true');
+
+      supabase.from('visits').insert({}).then(() => {
+        // visit saved
+      });
+    } catch {
+      supabase.from('visits').insert({}).then(() => {
+        // visit saved
+      });
+    }
+  }, []);
+
+  /*
+   * /admin MANZILIGA KIRILGANDA ADMIN PANELNI OCHISH
+   */
+  useEffect(() => {
+    if (window.location.pathname === '/admin') {
+      window.location.replace('/admin');
+    }
+  }, []);
 
   const copyPageUrl = async () => {
     try {
@@ -96,7 +141,10 @@ export default function App() {
     }
 
     setCopiedLink(true);
-    setTimeout(() => setCopiedLink(false), 2200);
+
+    setTimeout(() => {
+      setCopiedLink(false);
+    }, 2200);
   };
 
   const copySocial = async (url: string, id: string) => {
@@ -107,7 +155,10 @@ export default function App() {
     }
 
     setCopiedSocial(id);
-    setTimeout(() => setCopiedSocial(null), 2200);
+
+    setTimeout(() => {
+      setCopiedSocial(null);
+    }, 2200);
   };
 
   const handlePhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -134,616 +185,570 @@ export default function App() {
     reader.readAsDataURL(file);
   };
 
+  const sendQuestion = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    setQuestionError('');
+    setQuestionSent(false);
+
+    const cleanName = name.trim();
+    const cleanMessage = message.trim();
+
+    if (!cleanName || !cleanMessage) {
+      setQuestionError('Iltimos, ism va savolni kiriting.');
+      return;
+    }
+
+    if (cleanName.length > 100) {
+      setQuestionError('Ism 100 ta belgidan oshmasligi kerak.');
+      return;
+    }
+
+    if (cleanMessage.length > 2000) {
+      setQuestionError('Savol 2000 ta belgidan oshmasligi kerak.');
+      return;
+    }
+
+    setSendingQuestion(true);
+
+    const { error } = await supabase.from('questions').insert({
+      name: cleanName,
+      message: cleanMessage,
+    });
+
+    if (error) {
+      setQuestionError(
+        'Savol yuborilmadi. Iltimos, birozdan keyin qayta urinib ko‘ring.'
+      );
+
+      setSendingQuestion(false);
+      return;
+    }
+
+    setName('');
+    setMessage('');
+    setQuestionSent(true);
+    setSendingQuestion(false);
+
+    setTimeout(() => {
+      setQuestionSent(false);
+    }, 4000);
+  };
+
+  const interests = [
+    {
+      id: 'football',
+      title: 'Football',
+      icon: Trophy,
+      text: 'Sport, jamoaviy ruh va raqobat menga yoqadi.',
+    },
+    {
+      id: 'chess',
+      title: 'Chess',
+      icon: Crown,
+      text: 'Strategik fikrlash va oldindan reja tuzish.',
+    },
+  ];
+
+  const filteredInterests =
+    activeInterest === 'all'
+      ? interests
+      : interests.filter((item) => item.id === activeInterest);
+
   return (
     <div className="min-h-screen bg-[#080808] text-white font-sans overflow-x-hidden">
       <BackgroundFX />
 
-      {/* GOLDEN BACKGROUND GLOW */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-[-300px] left-1/2 -translate-x-1/2 w-[700px] h-[700px] rounded-full bg-[#d4af37]/10 blur-[140px]" />
-        <div className="absolute top-[45%] left-[-300px] w-[500px] h-[500px] rounded-full bg-[#d4af37]/5 blur-[120px]" />
-        <div className="absolute bottom-[-250px] right-[-200px] w-[500px] h-[500px] rounded-full bg-[#d4af37]/5 blur-[120px]" />
-      </div>
-
       {/* HEADER */}
-      <header className="sticky top-0 z-50 bg-[#080808]/85 backdrop-blur-xl border-b border-white/10">
-        <div className="max-w-7xl mx-auto px-5 sm:px-8 h-20 flex items-center justify-between">
-          <a href="#hero" className="group">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full border border-[#d4af37]/50 flex items-center justify-center bg-[#d4af37]/5">
-                <Crown className="w-5 h-5 text-[#d4af37]" />
-              </div>
-
-              <div>
-                <div className="text-sm font-bold tracking-[0.18em] text-white">
-                  DONIYOR
-                </div>
-                <div className="text-[9px] tracking-[0.3em] text-[#d4af37]">
-                  NASRIYEV
-                </div>
-              </div>
-            </div>
-          </a>
-
-          <nav className="hidden md:flex items-center gap-8 text-sm text-white/60">
+      <header className="fixed top-0 left-0 right-0 z-50 border-b border-white/5 bg-[#080808]/80 backdrop-blur-xl">
+        <div className="max-w-7xl mx-auto px-5">
+          <div className="h-20 flex items-center justify-between">
             <a
-              href="#about"
-              className="hover:text-[#d4af37] transition-colors"
+              href="#home"
+              className="font-bold text-xl tracking-wider"
             >
-              Men haqimda
+              DN<span className="text-[#d4af37]">.</span>
             </a>
-            <a
-              href="#achievements"
-              className="hover:text-[#d4af37] transition-colors"
-            >
-              Yutuqlar
-            </a>
-            <a
-              href="#interests"
-              className="hover:text-[#d4af37] transition-colors"
-            >
-              Qiziqishlar
-            </a>
-            <a
-              href="#contact"
-              className="hover:text-[#d4af37] transition-colors"
-            >
-              Aloqa
-            </a>
-          </nav>
 
-          <div className="hidden md:flex items-center gap-3">
-            <button
-              onClick={copyPageUrl}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full border border-white/10 bg-white/5 text-xs font-semibold text-white/70 hover:border-[#d4af37]/50 hover:text-[#d4af37] transition-all cursor-pointer"
-            >
-              {copiedLink ? (
-                <>
-                  <Check className="w-4 h-4" />
-                  Nusxalandi
-                </>
-              ) : (
-                <>
-                  <Copy className="w-4 h-4" />
-                  Havolani nusxalash
-                </>
-              )}
-            </button>
+            <nav className="hidden md:flex items-center gap-8 text-sm">
+              <a
+                href="#home"
+                className="text-gray-300 hover:text-[#d4af37] transition"
+              >
+                Bosh sahifa
+              </a>
 
-            <a
-              href="#contact"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#d4af37] text-black text-xs font-bold hover:bg-[#e4c35a] transition-all"
-            >
-              Bog'lanish
-              <ArrowUpRight className="w-4 h-4" />
-            </a>
-          </div>
+              <a
+                href="#about"
+                className="text-gray-300 hover:text-[#d4af37] transition"
+              >
+                Men haqimda
+              </a>
 
-          <div className="flex md:hidden items-center gap-2">
-            <button
-              onClick={copyPageUrl}
-              className="p-2.5 rounded-full border border-white/10 text-white/70 hover:text-[#d4af37] cursor-pointer"
-              aria-label="Havolani nusxalash"
-            >
-              {copiedLink ? (
-                <Check className="w-5 h-5" />
-              ) : (
-                <Copy className="w-5 h-5" />
-              )}
-            </button>
+              <a
+                href="#achievements"
+                className="text-gray-300 hover:text-[#d4af37] transition"
+              >
+                Yutuqlar
+              </a>
+
+              <a
+                href="#interests"
+                className="text-gray-300 hover:text-[#d4af37] transition"
+              >
+                Qiziqishlar
+              </a>
+
+              <a
+                href="#contact"
+                className="text-gray-300 hover:text-[#d4af37] transition"
+              >
+                Aloqa
+              </a>
+            </nav>
 
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2.5 rounded-full border border-white/10 text-white/70 cursor-pointer"
-              aria-label="Menyu"
+              className="md:hidden p-2 text-gray-300"
             >
               {mobileMenuOpen ? (
-                <X className="w-5 h-5" />
+                <X className="w-6 h-6" />
               ) : (
-                <Menu className="w-5 h-5" />
+                <Menu className="w-6 h-6" />
               )}
             </button>
           </div>
-        </div>
 
-        {mobileMenuOpen && (
-          <div className="md:hidden border-t border-white/10 bg-[#0b0b0b] px-6 py-5 space-y-2">
-            {[
-              ['#about', 'Men haqimda'],
-              ['#achievements', 'Yutuqlar'],
-              ['#interests', 'Qiziqishlar'],
-              ['#contact', 'Aloqa'],
-            ].map(([href, label]) => (
-              <a
-                key={href}
-                href={href}
-                onClick={() => setMobileMenuOpen(false)}
-                className="block py-3 text-sm text-white/70 border-b border-white/5 hover:text-[#d4af37]"
-              >
-                {label}
-              </a>
-            ))}
-          </div>
-        )}
+          {mobileMenuOpen && (
+            <div className="md:hidden pb-5 space-y-3">
+              {[
+                ['#home', 'Bosh sahifa'],
+                ['#about', 'Men haqimda'],
+                ['#achievements', 'Yutuqlar'],
+                ['#interests', 'Qiziqishlar'],
+                ['#contact', 'Aloqa'],
+              ].map(([href, label]) => (
+                <a
+                  key={href}
+                  href={href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block py-2 text-gray-300 hover:text-[#d4af37]"
+                >
+                  {label}
+                </a>
+              ))}
+            </div>
+          )}
+        </div>
       </header>
 
-      <main className="relative z-10">
-        {/* HERO */}
-        <section
-          id="hero"
-          className="max-w-7xl mx-auto px-5 sm:px-8 pt-16 pb-24 md:pt-24 md:pb-32"
-        >
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-14 lg:gap-20 items-center">
-            <div className="lg:col-span-7">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[#d4af37]/30 bg-[#d4af37]/5 text-[#d4af37] text-[10px] sm:text-xs font-semibold tracking-[0.18em] uppercase mb-7">
-                <Sparkles className="w-3.5 h-3.5" />
-                Shaxsiy Portfolio
+      {/* HERO */}
+      <section
+        id="home"
+        className="relative min-h-screen flex items-center pt-20"
+      >
+        <div className="max-w-7xl mx-auto px-5 w-full py-20">
+          <div className="grid lg:grid-cols-2 gap-14 items-center">
+            <div>
+              <div className="inline-flex items-center gap-2 border border-[#d4af37]/30 bg-[#d4af37]/5 rounded-full px-4 py-2 mb-7">
+                <Sparkles className="w-4 h-4 text-[#d4af37]" />
+
+                <span className="text-sm text-[#d4af37]">
+                  Personal Portfolio
+                </span>
               </div>
 
-              <h1 className="text-5xl sm:text-6xl lg:text-8xl font-black tracking-[-0.04em] leading-[0.95]">
-                Doniyor
-                <span className="block text-[#d4af37] mt-2">
-                  Nasriyev
+              <p className="text-gray-500 uppercase tracking-[0.3em] text-sm mb-4">
+                Salom, men
+              </p>
+
+              <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black leading-tight">
+                NASRIYEV
+                <span className="block text-[#d4af37]">
+                  DONIYOR
                 </span>
               </h1>
 
-              <div className="w-20 h-px bg-[#d4af37] my-8" />
-
-              <p className="text-xl sm:text-2xl text-white/70 font-light">
-                Iqtisod yo'nalishi talabasi
+              <p className="text-gray-400 text-lg max-w-xl mt-7 leading-8">
+                Maqsad sari intiluvchi, yangi bilim va imkoniyatlarni
+                izlashdan to‘xtamaydigan inson.
               </p>
 
-              <p className="mt-5 max-w-2xl text-sm sm:text-base leading-7 text-white/45">
-                IELTS va milliy sertifikat sohibi. Xalqaro olimpiada terma
-                jamoasi sobiq a'zosi. Bilim, intilish va rivojlanish yo'lida
-                harakat qiluvchi yosh mutaxassis.
-              </p>
-
-              <div className="flex flex-wrap gap-3 mt-9">
+              <div className="flex flex-wrap gap-4 mt-9">
                 <a
                   href="#about"
-                  className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full bg-[#d4af37] text-black text-sm font-bold hover:bg-[#e4c35a] transition-all"
+                  className="inline-flex items-center gap-2 bg-[#d4af37] text-black font-bold px-6 py-3.5 rounded-xl hover:bg-[#e5c158] transition"
                 >
                   Men haqimda
-                  <ArrowUpRight className="w-4 h-4" />
+                  <ArrowUpRight className="w-5 h-5" />
                 </a>
 
-                <a
-                  href="#contact"
-                  className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full border border-white/15 bg-white/5 text-white text-sm font-semibold hover:border-[#d4af37]/50 hover:text-[#d4af37] transition-all"
+                <button
+                  onClick={copyPageUrl}
+                  className="inline-flex items-center gap-2 border border-white/10 bg-white/5 px-6 py-3.5 rounded-xl hover:border-[#d4af37]/50 transition"
                 >
-                  Bog'lanish
-                </a>
-              </div>
+                  {copiedLink ? (
+                    <Check className="w-5 h-5 text-[#d4af37]" />
+                  ) : (
+                    <Copy className="w-5 h-5" />
+                  )}
 
-              <div className="flex flex-wrap gap-7 mt-10 pt-7 border-t border-white/10">
-                <div>
-                  <div className="text-[#d4af37] text-xl font-bold">IELTS</div>
-                  <div className="text-[10px] uppercase tracking-wider text-white/35 mt-1">
-                    Sertifikat
-                  </div>
-                </div>
-
-                <div>
-                  <div className="text-[#d4af37] text-xl font-bold">
-                    Milliy
-                  </div>
-                  <div className="text-[10px] uppercase tracking-wider text-white/35 mt-1">
-                    Sertifikat
-                  </div>
-                </div>
-
-                <div>
-                  <div className="text-[#d4af37] text-xl font-bold">
-                    Xalqaro
-                  </div>
-                  <div className="text-[10px] uppercase tracking-wider text-white/35 mt-1">
-                    Olimpiada
-                  </div>
-                </div>
+                  {copiedLink ? 'Nusxalandi' : 'Saytni ulashish'}
+                </button>
               </div>
             </div>
 
-            {/* PHOTO */}
-            <div className="lg:col-span-5 flex justify-center lg:justify-end">
-              <div className="relative w-full max-w-[460px]">
-                <div className="absolute -inset-5 rounded-[40px] border border-[#d4af37]/10" />
-                <div className="absolute -inset-2 rounded-[34px] border border-[#d4af37]/25" />
+            <div className="relative flex justify-center">
+              <div className="absolute w-80 h-80 rounded-full bg-[#d4af37]/10 blur-3xl" />
 
-                <div className="relative aspect-[4/5] overflow-hidden rounded-[30px] bg-[#111] border border-white/10 shadow-2xl">
-                  <img
-                    src={photoSrc}
-                    alt="Doniyor Nasriyev"
-                    className="w-full h-full object-cover object-top grayscale hover:grayscale-0 transition-all duration-700"
-                    onError={(e) => {
-                      e.currentTarget.src = '/doniyor-nasriyev.jpg';
-                    }}
-                  />
+              <div className="relative w-72 h-72 sm:w-96 sm:h-96 rounded-[2rem] border border-[#d4af37]/30 p-2 bg-[#111]">
+                <img
+                  src={photoSrc}
+                  alt="Doniyor Nasriyev"
+                  className="w-full h-full object-cover rounded-[1.6rem]"
+                />
 
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="absolute bottom-5 right-5 w-12 h-12 rounded-xl bg-black/80 border border-[#d4af37]/50 flex items-center justify-center text-[#d4af37] hover:bg-[#d4af37] hover:text-black transition"
+                  title="Rasmni almashtirish"
+                >
+                  <Camera className="w-5 h-5" />
+                </button>
 
-                  <div className="absolute bottom-0 left-0 right-0 p-7">
-                    <div className="text-[#d4af37] text-[10px] tracking-[0.25em] uppercase font-bold">
-                      Doniyor Nasriyev
-                    </div>
-
-                    <div className="text-white text-lg font-semibold mt-1">
-                      Economics Student
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={() => fileInputRef.current?.click()}
-                    className="absolute top-4 right-4 p-3 rounded-full bg-black/60 border border-white/10 text-white/70 hover:text-[#d4af37] opacity-0 hover:opacity-100 transition-all cursor-pointer"
-                    title="Suratni almashtirish"
-                  >
-                    <Camera className="w-4 h-4" />
-                  </button>
-
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handlePhoto}
-                    className="hidden"
-                  />
-                </div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handlePhoto}
+                  className="hidden"
+                />
               </div>
             </div>
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* ABOUT */}
-        <section
-          id="about"
-          className="border-y border-white/10 bg-white/[0.015]"
-        >
-          <div className="max-w-7xl mx-auto px-5 sm:px-8 py-24 md:py-32">
-            <div className="grid md:grid-cols-12 gap-12">
-              <div className="md:col-span-4">
-                <div className="text-[#d4af37] text-[10px] font-bold tracking-[0.25em] uppercase">
-                  01 — Tanishtiruv
-                </div>
+      {/* ABOUT */}
+      <section
+        id="about"
+        className="py-24 border-t border-white/5"
+      >
+        <div className="max-w-7xl mx-auto px-5">
+          <div className="max-w-3xl">
+            <p className="text-[#d4af37] uppercase tracking-[0.25em] text-sm mb-4">
+              Men haqimda
+            </p>
 
-                <h2 className="text-4xl sm:text-5xl font-bold mt-4">
-                  Men
-                  <span className="text-[#d4af37]"> haqimda</span>
-                </h2>
-              </div>
+            <h2 className="text-4xl sm:text-5xl font-bold mb-7">
+              O‘zim haqimda
+            </h2>
 
-              <div className="md:col-span-8">
-                <div className="relative p-8 sm:p-12 rounded-3xl border border-white/10 bg-white/[0.025]">
-                  <div className="absolute top-0 left-8 w-16 h-px bg-[#d4af37]" />
+            <p className="text-gray-400 text-lg leading-8">
+              Men Nasriyev Doniyor. O‘z ustimda ishlash, yangi
+              bilimlarni o‘rganish va kelajak uchun katta maqsadlar
+              sari harakat qilishni yaxshi ko‘raman.
+            </p>
 
-                  <p className="text-xl sm:text-2xl lg:text-3xl leading-relaxed text-white/75 font-light">
-                    “Men iqtisod yo'nalishida o'qiyman. IELTS va milliy
-                    sertifikat sohibiman, avval xalqaro olimpiada terma
-                    jamoasi a'zosi bo'lganman. Bo'sh vaqtimda futbol o'ynayman
-                    va shaxmat bilan shug'ullanaman.”
-                  </p>
-
-                  <div className="mt-10 flex items-center gap-3">
-                    <div className="w-10 h-px bg-[#d4af37]" />
-                    <span className="text-xs text-[#d4af37] font-semibold tracking-wider">
-                      DONIYOR NASRIYEV
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <p className="text-gray-500 text-lg leading-8 mt-5">
+              Har bir yangi tajribani rivojlanish uchun imkoniyat
+              deb bilaman.
+            </p>
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* ACHIEVEMENTS */}
-        <section
-          id="achievements"
-          className="max-w-7xl mx-auto px-5 sm:px-8 py-24 md:py-32"
-        >
-          <div className="mb-14">
-            <div className="text-[#d4af37] text-[10px] font-bold tracking-[0.25em] uppercase">
-              02 — Akademik
-            </div>
+      {/* ACHIEVEMENTS */}
+      <section
+        id="achievements"
+        className="py-24 border-t border-white/5 bg-[#0b0b0b]"
+      >
+        <div className="max-w-7xl mx-auto px-5">
+          <div className="mb-12">
+            <p className="text-[#d4af37] uppercase tracking-[0.25em] text-sm mb-4">
+              Natijalar
+            </p>
 
-            <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-5 mt-4">
-              <h2 className="text-4xl sm:text-5xl font-bold">
-                Asosiy
-                <span className="text-[#d4af37]"> yutuqlar</span>
-              </h2>
-
-              <p className="max-w-md text-sm leading-6 text-white/40">
-                Ta'lim va xalqaro faoliyat davomida qo'lga kiritilgan muhim
-                natijalar.
-              </p>
-            </div>
+            <h2 className="text-4xl sm:text-5xl font-bold">
+              Yutuqlar
+            </h2>
           </div>
 
           <div className="grid md:grid-cols-3 gap-5">
             {[
               {
+                icon: Trophy,
+                title: 'Maqsadlar',
+                text: 'Katta maqsadlar qo‘yib, ularga bosqichma-bosqich erishish.',
+              },
+              {
                 icon: Award,
-                number: '01',
-                title: 'IELTS',
-                text: 'Ingliz tilini xalqaro standartlar asosida egallaganlikni tasdiqlovchi xalqaro sertifikat.',
+                title: 'Rivojlanish',
+                text: 'Har kuni yangi bilim va tajriba olishga intilish.',
               },
               {
                 icon: Sparkles,
-                number: '02',
-                title: 'Milliy sertifikat',
-                text: "Bilim va akademik tayyorgarlik darajasini tasdiqlovchi milliy sertifikat.",
-              },
-              {
-                icon: Trophy,
-                number: '03',
-                title: 'Xalqaro olimpiada',
-                text: "Xalqaro fan olimpiadasida terma jamoa tarkibida ishtirok etgan sobiq a'zo.",
+                title: 'Kelajak',
+                text: 'Yangi imkoniyatlar va kuchli loyihalar sari harakat.',
               },
             ].map((item) => {
               const Icon = item.icon;
 
               return (
                 <div
-                  key={item.number}
-                  className="group relative p-7 sm:p-9 rounded-3xl border border-white/10 bg-white/[0.025] hover:bg-[#d4af37]/[0.04] hover:border-[#d4af37]/30 transition-all duration-500"
+                  key={item.title}
+                  className="bg-[#111] border border-white/5 rounded-2xl p-7 hover:border-[#d4af37]/30 transition"
                 >
-                  <div className="flex items-center justify-between">
-                    <div className="w-12 h-12 rounded-2xl border border-[#d4af37]/25 bg-[#d4af37]/5 flex items-center justify-center">
-                      <Icon className="w-5 h-5 text-[#d4af37]" />
-                    </div>
-
-                    <span className="text-4xl font-black text-white/[0.06]">
-                      {item.number}
-                    </span>
+                  <div className="w-12 h-12 rounded-xl bg-[#d4af37]/10 flex items-center justify-center mb-6">
+                    <Icon className="w-6 h-6 text-[#d4af37]" />
                   </div>
 
-                  <h3 className="text-xl font-bold mt-9">{item.title}</h3>
+                  <h3 className="text-xl font-bold mb-3">
+                    {item.title}
+                  </h3>
 
-                  <p className="text-sm text-white/40 leading-6 mt-3">
+                  <p className="text-gray-500 leading-7">
                     {item.text}
                   </p>
-
-                  <div className="w-10 h-px bg-[#d4af37]/40 mt-7 group-hover:w-20 transition-all duration-500" />
                 </div>
               );
             })}
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* INTERESTS */}
-        <section
-          id="interests"
-          className="border-y border-white/10 bg-white/[0.015]"
-        >
-          <div className="max-w-7xl mx-auto px-5 sm:px-8 py-24 md:py-32">
-            <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-8 mb-12">
-              <div>
-                <div className="text-[#d4af37] text-[10px] font-bold tracking-[0.25em] uppercase">
-                  03 — Lifestyle
-                </div>
+      {/* INTERESTS */}
+      <section
+        id="interests"
+        className="py-24 border-t border-white/5"
+      >
+        <div className="max-w-7xl mx-auto px-5">
+          <div className="mb-10">
+            <p className="text-[#d4af37] uppercase tracking-[0.25em] text-sm mb-4">
+              Menga yoqadi
+            </p>
 
-                <h2 className="text-4xl sm:text-5xl font-bold mt-4">
-                  Qiziqishlar
-                </h2>
-              </div>
-
-              <div className="flex gap-1 p-1 rounded-full bg-white/5 border border-white/10 w-fit">
-                {[
-                  ['all', 'Barchasi'],
-                  ['football', 'Futbol'],
-                  ['chess', 'Shaxmat'],
-                ].map(([id, label]) => (
-                  <button
-                    key={id}
-                    onClick={() =>
-                      setActiveInterest(
-                        id as 'all' | 'football' | 'chess'
-                      )
-                    }
-                    className={`px-5 py-2.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
-                      activeInterest === id
-                        ? 'bg-[#d4af37] text-black'
-                        : 'text-white/50 hover:text-white'
-                    }`}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-5">
-              {(activeInterest === 'all' ||
-                activeInterest === 'football') && (
-                <div className="group relative overflow-hidden rounded-3xl border border-white/10 bg-[#0c0c0c] p-8 sm:p-10">
-                  <div className="absolute -right-20 -top-20 w-56 h-56 rounded-full border border-[#d4af37]/10" />
-                  <div className="absolute -right-10 -top-10 w-36 h-36 rounded-full border border-[#d4af37]/10" />
-
-                  <div className="relative">
-                    <div className="text-[#d4af37] text-xs tracking-[0.2em] uppercase">
-                      Sport
-                    </div>
-
-                    <h3 className="text-3xl font-bold mt-4">Futbol</h3>
-
-                    <p className="text-sm leading-7 text-white/40 mt-5 max-w-lg">
-                      Faol jismoniy holatni saqlash, jamoaviy birdamlik,
-                      tezkor qaror qabul qilish va sog'lom raqobat ruhini
-                      rivojlantiruvchi sevimli sport turi.
-                    </p>
-
-                    <div className="flex gap-2 mt-8">
-                      <span className="px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-[10px] text-white/50">
-                        Jamoaviy o'yin
-                      </span>
-                      <span className="px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-[10px] text-white/50">
-                        Faollik
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {(activeInterest === 'all' ||
-                activeInterest === 'chess') && (
-                <div className="group relative overflow-hidden rounded-3xl border border-white/10 bg-[#0c0c0c] p-8 sm:p-10">
-                  <div className="absolute -right-20 -top-20 w-56 h-56 rounded-full border border-[#d4af37]/10" />
-                  <div className="absolute -right-10 -top-10 w-36 h-36 rounded-full border border-[#d4af37]/10" />
-
-                  <div className="relative">
-                    <div className="text-[#d4af37] text-xs tracking-[0.2em] uppercase">
-                      Intellektual sport
-                    </div>
-
-                    <h3 className="text-3xl font-bold mt-4">Shaxmat</h3>
-
-                    <p className="text-sm leading-7 text-white/40 mt-5 max-w-lg">
-                      Strategik fikrlash, har bir yurish oqibatini tahlil
-                      qilish, sabr-toqat va tizimli fikrlash qobiliyatini
-                      rivojlantiruvchi mashg'ulot.
-                    </p>
-
-                    <div className="flex gap-2 mt-8">
-                      <span className="px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-[10px] text-white/50">
-                        Strategiya
-                      </span>
-                      <span className="px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-[10px] text-white/50">
-                        Tahlil
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
+            <h2 className="text-4xl sm:text-5xl font-bold">
+              Qiziqishlar
+            </h2>
           </div>
-        </section>
 
-        {/* CONTACT */}
-        <section
-          id="contact"
-          className="max-w-7xl mx-auto px-5 sm:px-8 py-24 md:py-32"
-        >
-          <div className="max-w-3xl mx-auto text-center">
-            <div className="text-[#d4af37] text-[10px] font-bold tracking-[0.25em] uppercase">
-              04 — Aloqa
+          <div className="flex flex-wrap gap-3 mb-8">
+            {[
+              ['all', 'Barchasi'],
+              ['football', 'Football'],
+              ['chess', 'Chess'],
+            ].map(([id, label]) => (
+              <button
+                key={id}
+                onClick={() =>
+                  setActiveInterest(
+                    id as 'all' | 'football' | 'chess'
+                  )
+                }
+                className={`px-5 py-2.5 rounded-xl border transition ${
+                  activeInterest === id
+                    ? 'bg-[#d4af37] text-black border-[#d4af37]'
+                    : 'border-white/10 text-gray-400 hover:border-[#d4af37]/40'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-5">
+            {filteredInterests.map((item) => {
+              const Icon = item.icon;
+
+              return (
+                <div
+                  key={item.id}
+                  className="bg-[#111] border border-white/5 rounded-2xl p-7"
+                >
+                  <Icon className="w-8 h-8 text-[#d4af37] mb-5" />
+
+                  <h3 className="text-2xl font-bold mb-3">
+                    {item.title}
+                  </h3>
+
+                  <p className="text-gray-500 leading-7">
+                    {item.text}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* QUESTION */}
+      <section
+        id="question"
+        className="py-24 border-t border-white/5 bg-[#0b0b0b]"
+      >
+        <div className="max-w-3xl mx-auto px-5">
+          <div className="text-center mb-10">
+            <div className="w-14 h-14 rounded-2xl bg-[#d4af37]/10 flex items-center justify-center mx-auto mb-5">
+              <MessageSquare className="w-7 h-7 text-[#d4af37]" />
             </div>
 
-            <h2 className="text-4xl sm:text-5xl font-bold mt-4">
-              Bog'lanish
+            <p className="text-[#d4af37] uppercase tracking-[0.25em] text-sm mb-3">
+              Savolingiz bormi?
+            </p>
+
+            <h2 className="text-4xl font-bold">
+              Menga savol yuboring
             </h2>
 
-            <p className="text-sm sm:text-base text-white/40 leading-7 mt-5">
-              Men bilan bog'lanish yoki ijtimoiy tarmoqlardagi profillarimni
-              kuzatish uchun quyidagi havolalardan foydalanishingiz mumkin.
+            <p className="text-gray-500 mt-4">
+              Savolingizni yuboring. U faqat admin panelda
+              ko‘rinadi.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-5 max-w-4xl mx-auto mt-14">
+          <form
+            onSubmit={sendQuestion}
+            className="bg-[#111] border border-white/5 rounded-3xl p-6 sm:p-8"
+          >
+            <div className="mb-5">
+              <label className="block text-sm text-gray-400 mb-2">
+                Ismingiz
+              </label>
+
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Ismingizni yozing"
+                maxLength={100}
+                className="w-full bg-[#080808] border border-white/10 rounded-xl px-4 py-3.5 outline-none focus:border-[#d4af37] transition"
+              />
+            </div>
+
+            <div className="mb-5">
+              <label className="block text-sm text-gray-400 mb-2">
+                Savolingiz
+              </label>
+
+              <textarea
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                placeholder="Savolingizni yozing..."
+                maxLength={2000}
+                rows={6}
+                className="w-full bg-[#080808] border border-white/10 rounded-xl px-4 py-3.5 outline-none focus:border-[#d4af37] transition resize-none"
+              />
+            </div>
+
+            {questionError && (
+              <div className="mb-5 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl px-4 py-3 text-sm">
+                {questionError}
+              </div>
+            )}
+
+            {questionSent && (
+              <div className="mb-5 bg-green-500/10 border border-green-500/20 text-green-400 rounded-xl px-4 py-3 text-sm flex items-center gap-2">
+                <Check className="w-5 h-5" />
+                Savolingiz muvaffaqiyatli yuborildi!
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={sendingQuestion}
+              className="w-full bg-[#d4af37] text-black font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 hover:bg-[#e5c158] transition disabled:opacity-50"
+            >
+              <Send className="w-5 h-5" />
+
+              {sendingQuestion
+                ? 'Yuborilmoqda...'
+                : 'Savolni yuborish'}
+            </button>
+          </form>
+        </div>
+      </section>
+
+      {/* CONTACT */}
+      <section
+        id="contact"
+        className="py-24 border-t border-white/5"
+      >
+        <div className="max-w-7xl mx-auto px-5">
+          <div className="mb-12">
+            <p className="text-[#d4af37] uppercase tracking-[0.25em] text-sm mb-4">
+              Aloqa
+            </p>
+
+            <h2 className="text-4xl sm:text-5xl font-bold">
+              Men bilan bog‘laning
+            </h2>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-5">
             {SOCIAL_LINKS.map((social) => (
               <div
                 key={social.id}
-                className="group p-7 sm:p-9 rounded-3xl border border-white/10 bg-white/[0.025] hover:border-[#d4af37]/30 transition-all"
+                className="bg-[#111] border border-white/5 rounded-2xl p-6 hover:border-[#d4af37]/30 transition"
               >
-                <div className="flex items-start justify-between">
-                  <div className="w-14 h-14 rounded-2xl bg-[#d4af37]/10 border border-[#d4af37]/20 flex items-center justify-center text-[#d4af37]">
-                    <SocialIcon id={social.id} className="w-7 h-7" />
-                  </div>
-
+                <div className="flex items-start justify-between gap-4">
                   <a
                     href={social.url}
                     target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-3 rounded-full border border-white/10 text-white/40 hover:text-[#d4af37] hover:border-[#d4af37]/30 transition-all"
+                    rel="noreferrer"
+                    className="flex items-center gap-4"
                   >
-                    <ArrowUpRight className="w-5 h-5" />
-                  </a>
-                </div>
+                    <div className="w-12 h-12 rounded-xl bg-[#d4af37]/10 flex items-center justify-center text-[#d4af37]">
+                      <SocialIcon
+                        id={social.id}
+                        className="w-6 h-6"
+                      />
+                    </div>
 
-                <h3 className="text-2xl font-bold mt-8">
-                  {social.name}
-                </h3>
+                    <div>
+                      <h3 className="font-bold text-lg">
+                        {social.name}
+                      </h3>
 
-                <p className="text-[#d4af37] text-sm mt-1">
-                  {social.handle}
-                </p>
-
-                <p className="text-sm text-white/40 mt-4 leading-6">
-                  {social.description}
-                </p>
-
-                <div className="flex items-center justify-between mt-8 pt-5 border-t border-white/10">
-                  <a
-                    href={social.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 text-sm font-semibold text-[#d4af37] hover:text-[#e4c35a]"
-                  >
-                    Profilga o'tish
-                    <ArrowUpRight className="w-4 h-4" />
+                      <p className="text-[#d4af37] text-sm">
+                        {social.handle}
+                      </p>
+                    </div>
                   </a>
 
                   <button
-                    onClick={() => copySocial(social.url, social.id)}
-                    className="inline-flex items-center gap-2 text-xs text-white/40 hover:text-white cursor-pointer"
+                    onClick={() =>
+                      copySocial(social.url, social.id)
+                    }
+                    className="p-3 rounded-xl border border-white/10 hover:border-[#d4af37]/40 transition"
                   >
                     {copiedSocial === social.id ? (
-                      <>
-                        <Check className="w-4 h-4 text-[#d4af37]" />
-                        Nusxalandi
-                      </>
+                      <Check className="w-5 h-5 text-[#d4af37]" />
                     ) : (
-                      <>
-                        <Copy className="w-4 h-4" />
-                        Nusxa
-                      </>
+                      <Copy className="w-5 h-5" />
                     )}
                   </button>
                 </div>
+
+                <p className="text-gray-500 mt-5">
+                  {social.description}
+                </p>
               </div>
             ))}
           </div>
-        </section>
-      </main>
+        </div>
+      </section>
 
       {/* FOOTER */}
-      <footer className="relative z-10 border-t border-white/10 bg-black">
-        <div className="max-w-7xl mx-auto px-5 sm:px-8 py-10">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="text-center md:text-left">
-              <div className="flex items-center justify-center md:justify-start gap-3">
-                <Crown className="w-4 h-4 text-[#d4af37]" />
-                <span className="text-sm font-bold tracking-wider">
-                  DONIYOR NASRIYEV
-                </span>
-              </div>
+      <footer className="border-t border-white/5 py-8">
+        <div className="max-w-7xl mx-auto px-5 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p className="text-gray-600 text-sm">
+            © {new Date().getFullYear()} Nasriyev Doniyor
+          </p>
 
-              <p className="text-xs text-white/25 mt-2">
-                Iqtisod yo'nalishi talabasi
-              </p>
-            </div>
-
-            <div className="flex items-center gap-5">
-              <a
-                href="https://t.me/Doniyor_Nasriyev"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-white/40 hover:text-[#d4af37] transition-colors"
-              >
-                <TelegramIcon className="w-5 h-5" />
-              </a>
-
-              <a
-                href="https://instagram.com/doniyor_nasriyev"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-white/40 hover:text-[#d4af37] transition-colors"
-              >
-                <Instagram className="w-5 h-5" />
-              </a>
-            </div>
-
-            <p className="text-xs text-white/25">
-              © {new Date().getFullYear()} Doniyor Nasriyev
-            </p>
-          </div>
+          <p className="text-gray-700 text-xs">
+            Personal Portfolio
+          </p>
         </div>
       </footer>
     </div>
