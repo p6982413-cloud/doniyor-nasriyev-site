@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 
 import BackgroundFX from './BackgroundFX';
+import Admin from './Admin';
 import { supabase } from './supabase';
 
 interface SocialItem {
@@ -71,6 +72,11 @@ function SocialIcon({
 }
 
 export default function App() {
+  // /admin sahifasini to‘g‘ri ochish
+  if (window.location.pathname === '/admin') {
+    return <Admin />;
+  }
+
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedSocial, setCopiedSocial] = useState<string | null>(null);
@@ -99,11 +105,7 @@ export default function App() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  /*
-   * TASHRIFNI HISOBLASH
-   * Bir brauzer sessiyasida qayta-qayta refresh qilinsa,
-   * har safar yangi tashrif hisoblanmaydi.
-   */
+  // Tashrifni hisoblash
   useEffect(() => {
     const visitKey = 'doniyor_site_visit';
 
@@ -121,15 +123,6 @@ export default function App() {
       supabase.from('visits').insert({}).then(() => {
         // visit saved
       });
-    }
-  }, []);
-
-  /*
-   * /admin MANZILIGA KIRILGANDA ADMIN PANELNI OCHISH
-   */
-  useEffect(() => {
-    if (window.location.pathname === '/admin') {
-      window.location.replace('/admin');
     }
   }, []);
 
@@ -263,10 +256,7 @@ export default function App() {
       <header className="fixed top-0 left-0 right-0 z-50 border-b border-white/5 bg-[#080808]/80 backdrop-blur-xl">
         <div className="max-w-7xl mx-auto px-5">
           <div className="h-20 flex items-center justify-between">
-            <a
-              href="#home"
-              className="font-bold text-xl tracking-wider"
-            >
+            <a href="#home" className="font-bold text-xl tracking-wider">
               DN<span className="text-[#d4af37]">.</span>
             </a>
 
@@ -364,9 +354,7 @@ export default function App() {
 
               <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black leading-tight">
                 NASRIYEV
-                <span className="block text-[#d4af37]">
-                  DONIYOR
-                </span>
+                <span className="block text-[#d4af37]">DONIYOR</span>
               </h1>
 
               <p className="text-gray-400 text-lg max-w-xl mt-7 leading-8">
@@ -430,10 +418,7 @@ export default function App() {
       </section>
 
       {/* ABOUT */}
-      <section
-        id="about"
-        className="py-24 border-t border-white/5"
-      >
+      <section id="about" className="py-24 border-t border-white/5">
         <div className="max-w-7xl mx-auto px-5">
           <div className="max-w-3xl">
             <p className="text-[#d4af37] uppercase tracking-[0.25em] text-sm mb-4">
@@ -445,14 +430,13 @@ export default function App() {
             </h2>
 
             <p className="text-gray-400 text-lg leading-8">
-              Men Nasriyev Doniyor. O‘z ustimda ishlash, yangi
-              bilimlarni o‘rganish va kelajak uchun katta maqsadlar
-              sari harakat qilishni yaxshi ko‘raman.
+              Men Nasriyev Doniyor. O‘z ustimda ishlash, yangi bilimlarni
+              o‘rganish va kelajak uchun katta maqsadlar sari harakat qilishni
+              yaxshi ko‘raman.
             </p>
 
             <p className="text-gray-500 text-lg leading-8 mt-5">
-              Har bir yangi tajribani rivojlanish uchun imkoniyat
-              deb bilaman.
+              Har bir yangi tajribani rivojlanish uchun imkoniyat deb bilaman.
             </p>
           </div>
         </div>
@@ -469,9 +453,7 @@ export default function App() {
               Natijalar
             </p>
 
-            <h2 className="text-4xl sm:text-5xl font-bold">
-              Yutuqlar
-            </h2>
+            <h2 className="text-4xl sm:text-5xl font-bold">Yutuqlar</h2>
           </div>
 
           <div className="grid md:grid-cols-3 gap-5">
@@ -503,13 +485,9 @@ export default function App() {
                     <Icon className="w-6 h-6 text-[#d4af37]" />
                   </div>
 
-                  <h3 className="text-xl font-bold mb-3">
-                    {item.title}
-                  </h3>
+                  <h3 className="text-xl font-bold mb-3">{item.title}</h3>
 
-                  <p className="text-gray-500 leading-7">
-                    {item.text}
-                  </p>
+                  <p className="text-gray-500 leading-7">{item.text}</p>
                 </div>
               );
             })}
@@ -518,19 +496,14 @@ export default function App() {
       </section>
 
       {/* INTERESTS */}
-      <section
-        id="interests"
-        className="py-24 border-t border-white/5"
-      >
+      <section id="interests" className="py-24 border-t border-white/5">
         <div className="max-w-7xl mx-auto px-5">
           <div className="mb-10">
             <p className="text-[#d4af37] uppercase tracking-[0.25em] text-sm mb-4">
               Menga yoqadi
             </p>
 
-            <h2 className="text-4xl sm:text-5xl font-bold">
-              Qiziqishlar
-            </h2>
+            <h2 className="text-4xl sm:text-5xl font-bold">Qiziqishlar</h2>
           </div>
 
           <div className="flex flex-wrap gap-3 mb-8">
@@ -542,9 +515,7 @@ export default function App() {
               <button
                 key={id}
                 onClick={() =>
-                  setActiveInterest(
-                    id as 'all' | 'football' | 'chess'
-                  )
+                  setActiveInterest(id as 'all' | 'football' | 'chess')
                 }
                 className={`px-5 py-2.5 rounded-xl border transition ${
                   activeInterest === id
@@ -568,13 +539,9 @@ export default function App() {
                 >
                   <Icon className="w-8 h-8 text-[#d4af37] mb-5" />
 
-                  <h3 className="text-2xl font-bold mb-3">
-                    {item.title}
-                  </h3>
+                  <h3 className="text-2xl font-bold mb-3">{item.title}</h3>
 
-                  <p className="text-gray-500 leading-7">
-                    {item.text}
-                  </p>
+                  <p className="text-gray-500 leading-7">{item.text}</p>
                 </div>
               );
             })}
@@ -597,13 +564,10 @@ export default function App() {
               Savolingiz bormi?
             </p>
 
-            <h2 className="text-4xl font-bold">
-              Menga savol yuboring
-            </h2>
+            <h2 className="text-4xl font-bold">Menga savol yuboring</h2>
 
             <p className="text-gray-500 mt-4">
-              Savolingizni yuboring. U faqat admin panelda
-              ko‘rinadi.
+              Savolingizni yuboring. U faqat admin panelda ko‘rinadi.
             </p>
           </div>
 
@@ -661,19 +625,14 @@ export default function App() {
             >
               <Send className="w-5 h-5" />
 
-              {sendingQuestion
-                ? 'Yuborilmoqda...'
-                : 'Savolni yuborish'}
+              {sendingQuestion ? 'Yuborilmoqda...' : 'Savolni yuborish'}
             </button>
           </form>
         </div>
       </section>
 
       {/* CONTACT */}
-      <section
-        id="contact"
-        className="py-24 border-t border-white/5"
-      >
+      <section id="contact" className="py-24 border-t border-white/5">
         <div className="max-w-7xl mx-auto px-5">
           <div className="mb-12">
             <p className="text-[#d4af37] uppercase tracking-[0.25em] text-sm mb-4">
@@ -699,16 +658,11 @@ export default function App() {
                     className="flex items-center gap-4"
                   >
                     <div className="w-12 h-12 rounded-xl bg-[#d4af37]/10 flex items-center justify-center text-[#d4af37]">
-                      <SocialIcon
-                        id={social.id}
-                        className="w-6 h-6"
-                      />
+                      <SocialIcon id={social.id} className="w-6 h-6" />
                     </div>
 
                     <div>
-                      <h3 className="font-bold text-lg">
-                        {social.name}
-                      </h3>
+                      <h3 className="font-bold text-lg">{social.name}</h3>
 
                       <p className="text-[#d4af37] text-sm">
                         {social.handle}
@@ -717,9 +671,7 @@ export default function App() {
                   </a>
 
                   <button
-                    onClick={() =>
-                      copySocial(social.url, social.id)
-                    }
+                    onClick={() => copySocial(social.url, social.id)}
                     className="p-3 rounded-xl border border-white/10 hover:border-[#d4af37]/40 transition"
                   >
                     {copiedSocial === social.id ? (
@@ -730,9 +682,7 @@ export default function App() {
                   </button>
                 </div>
 
-                <p className="text-gray-500 mt-5">
-                  {social.description}
-                </p>
+                <p className="text-gray-500 mt-5">{social.description}</p>
               </div>
             ))}
           </div>
@@ -746,9 +696,7 @@ export default function App() {
             © {new Date().getFullYear()} Nasriyev Doniyor
           </p>
 
-          <p className="text-gray-700 text-xs">
-            Personal Portfolio
-          </p>
+          <p className="text-gray-700 text-xs">Personal Portfolio</p>
         </div>
       </footer>
     </div>
